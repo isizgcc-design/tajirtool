@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منصة الأعمال الذكية - أدوات الكريدي، الفواتير وتأكيد الطلبات</title>
+    
+    <!-- مكتبات Tailwind و React و Lucide Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        cta: { 50: '#fff7ed', 100: '#ffedd5', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================== */
+        /* إعدادات الهيكل الأساسية وحل مشكلة الخط      */
+        /* ========================================== */
+        :root {
+            --brand-color: #ff6b00;
+            --brand-secondary: #0055ff;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --text-dark: #1a1a2e;
+            --footer-bg: #0f172a; 
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8fafc;
+            width: 100%;
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body, #root, #root *, .modern-nav-wrapper *, .modern-footer * {
+            text-decoration: none !important;
+        }
+
+        /* ========================================== */
+        /* شاشة التحميل                                */
+        /* ========================================== */
+        .app-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f8fafc; z-index: 999999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        body.dark-mode .app-loader { background-color: #0f172a; }
+        .loader-spinner {
+            width: 55px; height: 55px;
+            border: 4px solid rgba(37, 99, 235, 0.2);
+            border-top-color: #f97316;
+            border-right-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        body.dark-mode .loader-text { color: #f8fafc !important; }
+        .loader-text {
+            margin-top: 20px; font-family: 'Cairo', sans-serif; font-weight: 800; color: #1e293b; font-size: 19px;
+        }
+
+        /* ========================================== */
+        /* الوضع المظلم (Dark Mode)                   */
+        /* ========================================== */
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .bg-white { background-color: #1e293b !important; }
+        body.dark-mode .bg-slate-50 { background-color: #0f172a !important; }
+        body.dark-mode .bg-slate-100 { background-color: #334155 !important; color: #f8fafc !important; }
+        body.dark-mode .text-slate-800 { color: #f8fafc !important; }
+        body.dark-mode .text-slate-700 { color: #e2e8f0 !important; }
+        body.dark-mode .text-slate-600 { color: #cbd5e1 !important; }
+        body.dark-mode .text-slate-500 { color: #94a3b8 !important; }
+        body.dark-mode .border-slate-200 { border-color: #334155 !important; }
+        body.dark-mode .border-slate-100 { border-color: #1e293b !important; }
+        body.dark-mode input, body.dark-mode select { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        body.dark-mode .shadow-sm, body.dark-mode .shadow-md, body.dark-mode .shadow-lg, body.dark-mode .shadow-xl { box-shadow: 0 8px 30px rgba(0,0,0,0.4) !important; border: 1px solid #334155 !important; }
+
+        /* تعديلات الوضع المظلم للقائمة العلوية العائمة وقائمة الهاتف */
+        body.dark-mode .modern-navbar {
+            background: rgba(30, 41, 59, 0.85) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+        }
+        body.dark-mode .modern-logo {
+            background: linear-gradient(135deg, #60a5fa, #fb923c) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        body.dark-mode .modern-mobile-menu {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+        }
+        body.dark-mode .modern-mobile-menu a {
+            background: rgba(255,255,255,0.03) !important;
+        }
+
+        /* ========================================== */
+        /* القائمة العلوية العائمة (Floating Navbar)  */
+        /* ========================================== */
+        .modern-nav-wrapper {
+            position: fixed !important;
+            top: 15px !important; 
+            left: 0 !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            z-index: 9999 !important;
+            pointer-events: none !important;
+            padding: 0 10px !important;
+            box-sizing: border-box !important;
+        }
+
+        .modern-navbar {
+            pointer-events: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            border-radius: 25px !important; 
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 10px 20px !important;
+            box-sizing: border-box !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .modern-logo {
+            font-size: 20px !important;
+            font-weight: 900 !important;
+            font-family: 'Cairo', sans-serif !important;
+            background: linear-gradient(135deg, var(--brand-secondary), var(--brand-color)) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            letter-spacing: -0.5px !important;
+        }
+        
+        .modern-links-container {
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .modern-link {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            font-family: 'Cairo', sans-serif !important;
+            padding: 6px 12px !important;
+            border-radius: 15px !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+        }
+
+        .modern-link:hover {
+            background: rgba(0, 0, 0, 0.05) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .modern-menu-toggle {
+            display: none !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            background: rgba(0,0,0,0.05) !important;
+            border: none !important;
+            cursor: pointer !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-direction: column !important;
+            gap: 5px !important; 
+            transition: background 0.3s !important;
+        }
+        .modern-menu-toggle:hover { background: rgba(0,0,0,0.1) !important; }
+        
+        .modern-menu-toggle span {
+            width: 22px !important; height: 3px !important;
+            border-radius: 2px !important;
+            transition: all 0.3s !important;
+        }
+        .modern-menu-toggle span:nth-child(1) { background: #ff6b00 !important; } 
+        .modern-menu-toggle span:nth-child(2) { background: #0055ff !important; } 
+        .modern-menu-toggle span:nth-child(3) { background: #8B4513 !important; } 
+
+        /* ========================================== */
+        /* القائمة المنسدلة للهاتف                     */
+        /* ========================================== */
+        .modern-mobile-menu {
+            display: none !important;
+            position: fixed !important;
+            top: 75px !important;
+            left: 2.5% !important;
+            width: 95% !important;
+            max-height: 75vh !important;
+            overflow-y: auto !important; 
+            overscroll-behavior: contain !important; 
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px) !important;
+            border-radius: 20px !important;
+            border: 1px solid rgba(255,255,255,0.4) !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+            padding: 15px !important;
+            box-sizing: border-box !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            z-index: 9998 !important;
+            opacity: 0 !important;
+            transform: translateY(-10px) !important;
+            transition: opacity 0.3s, transform 0.3s !important;
+        }
+
+        .modern-mobile-menu.show {
+            display: flex !important;
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+        .modern-mobile-menu a {
+            padding: 12px 16px !important;
+            border-radius: 12px !important; 
+            font-weight: 700 !important; 
+            font-family: 'Cairo', sans-serif !important;
+            background: rgba(0,0,0,0.03) !important; 
+            transition: 0.2s !important;
+            display: block !important;
+            text-align: right !important;
+        }
+
+        .modern-main-content {
+            flex: 1 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 100px 15px 40px !important; 
+            box-sizing: border-box !important;
+        }
+
+        /* ========================================== */
+        /* الفوتر الشبكي العصري                       */
+        /* ========================================== */
+        .modern-footer {
+            background: linear-gradient(180deg, #0f172a 0%, #060913 100%) !important; 
+            color: #fff !important;
+            padding: 60px 20px 30px !important;
+            position: relative !important;
+            overflow: hidden !important;
+            border-top: 3px solid transparent !important;
+            border-image: linear-gradient(to right, var(--brand-color), var(--brand-secondary)) 1 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .modern-footer::before {
+            content: '' !important; position: absolute !important;
+            top: -50px !important; left: -50px !important;
+            width: 300px !important; height: 300px !important;
+            background: radial-gradient(circle, rgba(0,85,255,0.15) 0%, rgba(0,0,0,0) 70%) !important;
+            border-radius: 50% !important; pointer-events: none !important;
+        }
+        .modern-footer::after {
+            content: '' !important; position: absolute !important;
+            bottom: -50px !important; right: -50px !important;
+            width: 300px !important; height: 300px !important;
+            background: radial-gradient(circle, rgba(255,107,0,0.1) 0%, rgba(0,0,0,0) 70%) !important;
+            border-radius: 50% !important; pointer-events: none !important;
+        }
+
+        .modern-footer-grid {
+            width: 100% !important; margin: 0 auto !important;
+            display: grid !important;
+            grid-template-columns: 2fr 1fr 1fr !important;
+            gap: 40px !important;
+            position: relative !important; z-index: 1 !important;
+        }
+
+        .footer-brand { display: flex !important; flex-direction: column !important; gap: 15px !important;}
+        .footer-logo { font-size: 26px !important; font-weight: 900 !important; color: white !important; display: inline-block !important; font-family: 'Cairo', sans-serif !important;}
+        .footer-desc { color: #94a3b8 !important; font-size: 14px !important; line-height: 1.6 !important; max-width: 100% !important; font-family: 'Cairo', sans-serif !important;}
+
+        .glow-socials { display: flex !important; gap: 12px !important; margin-top: 10px !important; flex-wrap: wrap !important;}
+        .glow-icon {
+            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            display: flex !important; justify-content: center !important; align-items: center !important;
+            transition: all 0.3s ease !important; position: relative !important;
+            overflow: hidden !important;
+        }
+        .glow-icon svg { width: 18px !important; height: 18px !important; fill: #fff !important; transition: 0.3s !important; position: relative !important; z-index: 2 !important;}
+        
+        .glow-icon:hover { transform: translateY(-5px) !important; border-color: transparent !important; }
+        .glow-fb:hover { background: #1877F2 !important; box-shadow: 0 10px 20px rgba(24,119,242,0.4) !important;}
+        .glow-ig:hover { background: #E4405F !important; box-shadow: 0 10px 20px rgba(228,64,95,0.4) !important;}
+        .glow-tw:hover { background: #1DA1F2 !important; box-shadow: 0 10px 20px rgba(29,161,242,0.4) !important;}
+        .glow-wa:hover { background: #25D366 !important; box-shadow: 0 10px 20px rgba(37,211,102,0.4) !important;}
+
+        .footer-links-col h4 { color: #fff !important; font-size: 17px !important; margin: 0 0 15px 0 !important; font-family: 'Cairo', sans-serif !important; font-weight: 800 !important;}
+        .footer-links-col { display: flex !important; flex-direction: column !important; gap: 10px !important;}
+        .footer-links-col a { color: #94a3b8 !important; font-size: 14px !important; transition: 0.2s !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; font-family: 'Cairo', sans-serif !important;}
+        .footer-links-col a:hover { color: var(--brand-color) !important; transform: translateX(-5px) !important;}
+
+        .footer-bottom {
+            width: 100% !important; margin: 40px auto 0 !important; padding-top: 20px !important;
+            border-top: 1px solid rgba(255,255,255,0.1) !important; text-align: center !important;
+            color: #64748b !important; font-size: 13px !important; position: relative !important; z-index: 1 !important;
+            display: flex !important; justify-content: space-between !important; align-items: center !important;
+            flex-wrap: wrap !important; gap: 10px !important;
+            font-family: 'Cairo', sans-serif !important;
+        }
+
+        @media (max-width: 1024px) {
+            .modern-links-container { display: none !important; }
+            .modern-menu-toggle { display: flex !important; }
+            .modern-footer-grid { grid-template-columns: 1fr !important; gap: 30px !important;}
+            .footer-bottom { flex-direction: column !important; text-align: center !important; justify-content: center !important;}
+        }
+
+        /* المؤثرات الخاصة والتدرجات */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        body.dark-mode .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(51, 65, 85, 0.8);
+        }
+        .hero-gradient-text {
+            background: linear-gradient(135deg, #f97316 0%, #2563eb 50%, #9333ea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 3s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 15px rgba(249, 115, 22, 0.2); }
+            100% { box-shadow: 0 0 35px rgba(37, 99, 235, 0.4); }
+        }
+    </style>
+
+    <script>
+        const APP_ICON_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEioOqHO13cuk3UjY7NxLxAl9TzZS8jXpSuPuh-HHOyEAOmbbZFdh9OaAHabTfJgiBzDe-5ODW0rUbyXDl1mB9iL2enGBYdxt3QVzon0PpxfR-zCc_ZlLk34487BHG1CKKiF_tQqorEDGQHuGuP_dXJD6zY-Q-y-TdM2DOSu33Hb5bPV9HkzJtEkHme69qk/s73/Screenshot_75.png";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            let linkIcon = document.querySelector("link[rel='icon']") || document.createElement('link');
+            linkIcon.rel = 'icon';
+            linkIcon.href = APP_ICON_URL;
+            document.head.appendChild(linkIcon);
+
+            let appleIcon = document.querySelector("link[rel='apple-touch-icon']") || document.createElement('link');
+            appleIcon.rel = 'apple-touch-icon';
+            appleIcon.href = APP_ICON_URL;
+            document.head.appendChild(appleIcon);
+
+            const manifestData = {
+                "name": "منصة الأعمال الذكية - أدوات التجار",
+                "short_name": "الأعمال الذكية",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#0f172a",
+                "theme_color": "#f97316",
+                "icons": [{
+                    "src": APP_ICON_URL,
+                    "sizes": "192x192 512x512",
+                    "type": "image/png"
+                }]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/manifest+json'});
+            const manifestURL = URL.createObjectURL(manifestBlob);
+            
+            let manifestTag = document.querySelector("link[rel='manifest']") || document.createElement('link');
+            manifestTag.rel = 'manifest';
+            manifestTag.href = manifestURL;
+            document.head.appendChild(manifestTag);
+        });
+    </script>
+
+    <meta name="theme-color" content="#f97316">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+</head>
+<body class="font-sans">
+
+    <!-- تطبيق الوضع المظلم فورياً لتجنب الوميض الأبيض -->
+    <script>
+        if (localStorage.getItem("carnet_theme_v3") === "dark") {
+            document.body.classList.add("dark-mode");
+        }
+    </script>
+    
+    <!-- شاشة التحميل الموحدة -->
+    <div id="app-loader" class="app-loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">جاري تجهيز المنصة الذكية...</div>
+    </div>
+
+    <!-- 1. القائمة العلوية العائمة (Floating Header) -->
+    <div class="modern-nav-wrapper">
+        <nav class="modern-navbar">
+            <a href="#" class="modern-logo">
+                <span class="p-1.5 bg-gradient-to-tr from-orange-500 to-blue-600 rounded-xl text-white shadow-md">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </span>
+                <span>منصة الأعمال الذكية</span>
+            </a>
+            
+            <div class="modern-links-container">
+                <a href="#hero" class="modern-link" style="color: #ef4444 !important;">الرئيسية</a>
+                <a href="#kridi-tool" class="modern-link" style="color: #eab308 !important;">أداة الكريدي</a>
+                <a href="#invoice-tool" class="modern-link" style="color: #f97316 !important;">أداة الفواتير</a>
+                <a href="#orders-tool" class="modern-link" style="color: #22c55e !important;">تأكيد الطلبات</a>
+                <a href="#calculator" class="modern-link" style="color: #06b6d4 !important;">حاسبة التوفير</a>
+                <a href="#bento-features" class="modern-link" style="color: #3b82f6 !important;">المميزات</a>
+                <a href="#testimonials" class="modern-link" style="color: #6366f1 !important;">آراء التجار</a>
+                <a href="#faq" class="modern-link" style="color: #a855f7 !important;">الأسئلة الشائعة</a>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle-btn" class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 transition text-slate-700 dark:text-yellow-400">
+                    <i data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+                
+                <button class="modern-menu-toggle" id="modern-toggle-btn">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- قائمة الهاتف المنسدلة -->
+    <div class="modern-mobile-menu" id="modern-mobile-menu">
+        <a href="#hero" style="color: #ef4444 !important;">الرئيسية</a>
+        <a href="#kridi-tool" style="color: #eab308 !important;">أداة الكريدي (دفتر الديون)</a>
+        <a href="#invoice-tool" style="color: #f97316 !important;">أداة الفواتير السريعة</a>
+        <a href="#orders-tool" style="color: #22c55e !important;">أداة تأكيد طلبات التجارة الإلكترونية</a>
+        <a href="#calculator" style="color: #06b6d4 !important;">حاسبة التوفير والعائد</a>
+        <a href="#bento-features" style="color: #3b82f6 !important;">مميزات المنصة الجيل الجديد</a>
+        <a href="#testimonials" style="color: #6366f1 !important;">تجارب وشهادات المستخدمين</a>
+        <a href="#faq" style="color: #a855f7 !important;">الأسئلة الشائعة والتحميل</a>
+    </div>
+
+    <!-- 2. المنطقة الرئيسية لمحتوى الواجهة -->
+    <main class="modern-main-content">
+        <div id="root" class="w-full"></div>
+    </main>
+
+    <!-- 3. الفوتر الشبكي المضيء -->
+    <footer class="modern-footer">
+        <div class="modern-footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="footer-logo">منصة الأعمال الذكية</a>
+                <p class="footer-desc">
+                    البيئة المتكاملة الشاملة لجميع احتياجات التاجر العربي. أدوات حديثة، خفيفة، وسريعة تعمل بمرونة عالية مع أو بدون إنترنت لإدارة ديونك، إنشاء فواتيرك الاحترافية، وتأكيد طلباتك التجارية بسهولة.
+                </p>
+                <div class="glow-socials">
+                    <a href="https://wa.me/212600000000" target="_blank" class="glow-icon glow-wa" title="واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg></a>
+                    <a href="#" class="glow-icon glow-fb" title="فيسبوك"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                    <a href="#" class="glow-icon glow-ig" title="انستغرام"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                    <a href="#" class="glow-icon glow-tw" title="تويتر"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                </div>
+            </div>
+            <div class="footer-links-col">
+                <h4>الأدوات الثلاث</h4>
+                <a href="#kridi-tool" style="color: #eab308 !important;"><i data-lucide="book-open" class="w-4 h-4"></i> أداة كارني الكريدي</a>
+                <a href="#invoice-tool" style="color: #f97316 !important;"><i data-lucide="file-text" class="w-4 h-4"></i> أداة الفواتير السريعة</a>
+                <a href="#orders-tool" style="color: #22c55e !important;"><i data-lucide="check-circle" class="w-4 h-4"></i> أداة تأكيد الطلبات</a>
+                <a href="#calculator" style="color: #06b6d4 !important;"><i data-lucide="calculator" class="w-4 h-4"></i> حاسبة التوفير الذكية</a>
+            </div>
+            <div class="footer-links-col">
+                <h4>روابط ومساعدة</h4>
+                <a href="#bento-features" style="color: #3b82f6 !important;">مميزات الجيل الجديد</a>
+                <a href="#testimonials" style="color: #6366f1 !important;">آراء ورسائل التجار</a>
+                <a href="#faq" style="color: #a855f7 !important;">الأسئلة الشائعة</a>
+                <a href="#" style="color: #ec4899 !important;">سياسة الخصوصية والأمان</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 جميع الحقوق محفوظة لـ <strong>منصة الأعمال الذكية</strong>.</div>
+            <div>مصمم بأحدث تقنيات الويب للتجار ورواد الأعمال</div>
+        </div>
+    </footer>
+
+    <script>
+        // التحكم في القائمة المنسدلة للهاتف والوضع المظلم
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('modern-toggle-btn');
+            const menu = document.getElementById('modern-mobile-menu');
+            const themeBtn = document.getElementById('theme-toggle-btn');
+            
+            if(btn && menu) {
+                btn.addEventListener('click', function() {
+                    menu.classList.toggle('show');
+                });
+
+                const links = menu.querySelectorAll('a');
+                links.forEach(link => {
+                    link.addEventListener('click', () => {
+                        menu.classList.remove('show');
+                    });
+                });
+            }
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', function() {
+                    document.body.classList.toggle('dark-mode');
+                    const isDark = document.body.classList.contains('dark-mode');
+                    localStorage.setItem("carnet_theme_v3", isDark ? "dark" : "light");
+                    themeBtn.innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5 text-yellow-400"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
+                    if (window.lucide) window.lucide.createIcons();
+                });
+            }
+        });
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // مكوّن الأيقونات Lucide
+        const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className} {...props}></i>;
+        };
+
+        // التطبيق الرئيسي للصفحة الرئيسية
+        function HomePage() {
+            // شاشة التثبيت للتطبيق (PWA)
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [isInstalled, setIsInstalled] = useState(false);
+            
+            // محاكاة أداة الكريدي التفاعلية
+            const [kridiName, setKridiName] = useState("حمزة المرضي");
+            const [kridiAmount, setKridiAmount] = useState("450");
+            const [kridiNote, setKridiNote] = useState("سلعة متنوعة + زيت");
+
+            // محاكاة أداة الفاتورة التفاعلية
+            const [invClient, setInvClient] = useState("شركة الأمل للتجارة");
+            const [invItem, setInvItem] = useState("تجهيزات مكتبية");
+            const [invPrice, setInvPrice] = useState("1200");
+            const [invQty, setInvQty] = useState("2");
+
+            // محاكاة أداة تأكيد الطلبات التفاعلية
+            const [orders, setOrders] = useState([
+                { id: "#ORD-991", client: "ياسين الإدريسي", city: "الدار البيضاء", status: "confirmed", amount: 350 },
+                { id: "#ORD-992", client: "سارة العلمي", city: "مراكش", status: "pending", amount: 520 },
+                { id: "#ORD-993", client: "عمر أيت موسى", city: "أكادير", status: "cancelled", amount: 280 }
+            ]);
+
+            // حاسبة العائد والتوفير الذكية
+            const [monthlyClients, setMonthlyClients] = useState(60);
+            const [avgDebt, setAvgDebt] = useState(500);
+            const [cancelRate, setCancelRate] = useState(30);
+
+            // الأسئلة الشائعة Accordion
+            const [openFaq, setOpenFaq] = useState(0);
+
+            // إخفاء شاشة التحميل بعد اكتمال المكونات
+            useEffect(() => {
+                const loader = document.getElementById('app-loader');
+                if (loader) {
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => loader.style.display = 'none', 500);
+                    }, 300); 
+                }
+
+                // إعداد PWA Install Prompt
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    setDeferredPrompt(e);
+                });
+
+                window.addEventListener('appinstalled', () => {
+                    setIsInstalled(true);
+                });
+            }, []);
+
+            const handleInstallPwa = () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            setIsInstalled(true);
+                        }
+                        setDeferredPrompt(null);
+                    });
+                } else {
+                    alert("التطبيق جاهز للتثبيت! من خيارات المتصفح اختر 'إضافة إلى الشاشة الرئيسية' أو 'Install App'.");
+                }
+            };
+
+            // حسابات الحسابات التفاعلية
+            const totalProtectedDebt = useMemo(() => monthlyClients * avgDebt, [monthlyClients, avgDebt]);
+            const savedHours = useMemo(() => Math.round(monthlyClients * 0.4), [monthlyClients]);
+            const savedSales = useMemo(() => Math.round((monthlyClients * (cancelRate / 100)) * 0.6 * avgDebt), [monthlyClients, cancelRate, avgDebt]);
+
+            // إرسال رسالة واتساب وهمية/تفاعلية
+            const triggerWhatsAppPreview = () => {
+                const msg = `مرحباً ${kridiName}، نود تذكيركم بالرصيد المتبقي لـ (${kridiNote}): ${kridiAmount} درهم. شكراً لتعاملكم معنا!`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+            };
+
+            return (
+                <div className="space-y-16 sm:space-y-24 w-full">
+
+                    {/* HERO SECTION - الهيرو الرئيسي الخرافي */}
+                    <section id="hero" className="relative pt-6 pb-12 overflow-hidden rounded-3xl">
+                        <div className="absolute top-0 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+                        <div className="max-w-5xl mx-auto text-center px-4">
+                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-50 to-blue-50 border border-orange-200 dark:bg-slate-800 dark:border-slate-700 px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 mb-6 shadow-sm pulse-glow">
+                                <span className="flex h-2.5 w-2.5 rounded-full bg-orange-500 animate-ping"></span>
+                                🚀 الجيل الجديد للتاجر التجاري والرقمي المغربي والعربي 2026
+                            </div>
+
+                            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white leading-tight mb-6">
+                                أدواتك الثلاثة الخارقة لإدارة <br className="hidden sm:block" />
+                                <span className="hero-gradient-text">الكريدي، الفواتير، وتأكيد الطلبات</span>
+                            </h1>
+
+                            <p className="text-base sm:text-xl font-bold text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10 leading-relaxed">
+                                تحكّم في ديون زبنائك، استخرج فواتيرك الاحترافية بضغطة زر، وأكّد طلبات متجرك بكل احترافية وبدون فقدان أي سنتيم! كل هذا في منصة متكاملة تعمل على هاتفك وحاسوبك مجاناً.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto mb-12">
+                                <button onClick={handleInstallPwa} className="w-full sm:w-auto bg-gradient-to-r from-orange-500 via-rose-500 to-blue-600 hover:opacity-95 text-white font-black py-4 px-8 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-orange-500/25 transition-all transform hover:-translate-y-1 text-base sm:text-lg">
+                                    <Icon name="download font-black" className="w-6 h-6" />
+                                    <span>تثبيت التطبيق مجاناً</span>
+                                </button>
+                                <a href="#kridi-tool" className="w-full sm:w-auto bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 text-slate-800 dark:text-white font-bold py-4 px-8 rounded-2xl flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md text-base">
+                                    <Icon name="sparkles" className="w-5 h-5 text-orange-500" />
+                                    <span>جرب الأدوات تفاعلياً</span>
+                                </a>
+                            </div>
+
+                            {/* الإحصائيات التفاعلية السريعة */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl">
+                                <div className="p-3 text-center border-l sm:border-l border-slate-100 dark:border-slate-700">
+                                    <span className="block text-2xl sm:text-4xl font-black text-orange-500">100%</span>
+                                    <span className="text-xs sm:text-sm font-bold text-slate-500">مجانية وتعمل أوفلاين</span>
+                                </div>
+                                <div className="p-3 text-center border-l sm:border-l-0 md:border-l border-slate-100 dark:border-slate-700">
+                                    <span className="block text-2xl sm:text-4xl font-black text-blue-600">0 دقيقة</span>
+                                    <span className="text-xs sm:text-sm font-bold text-slate-500">إعداد فوري بدون تعقيد</span>
+                                </div>
+                                <div className="p-3 text-center border-l border-slate-100 dark:border-slate-700">
+                                    <span className="block text-2xl sm:text-4xl font-black text-green-500">100%</span>
+                                    <span className="text-xs sm:text-sm font-bold text-slate-500">خصوصية وأمان تام</span>
+                                </div>
+                                <div className="p-3 text-center">
+                                    <span className="block text-2xl sm:text-4xl font-black text-purple-600">+10,000</span>
+                                    <span className="text-xs sm:text-sm font-bold text-slate-500">تاجر يعتمدون عليها</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 1: أداة الكريدي الذكي */}
+                    <section id="kridi-tool" className="scroll-mt-28">
+                        <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent p-6 sm:p-10 rounded-3xl border border-orange-200 dark:border-slate-700 shadow-lg">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                <div className="lg:col-span-6 space-y-6">
+                                    <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-3.5 py-1.5 rounded-xl font-black text-xs">
+                                        <Icon name="book-open" className="w-4 h-4" /> الأداة الأولى: دفتر الكريدي الذكي
+                                    </div>
+                                    <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-snug">
+                                        تخلّص من الكناش القديم ورتّب ديون زبنائك في جيبك!
+                                    </h2>
+                                    <p className="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        تتبع كل سنتيم بدقة عالية، حدد سقوف الديون لكل زبون لتفادي المخاطرة، وأرسل تذكيرات استخلاص الديون احترافية بنقرة واحدة عبر الواتساب.
+                                    </p>
+                                    <ul className="space-y-3 font-bold text-sm text-slate-700 dark:text-slate-200">
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-orange-500 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            حساب تلقائي للديون والأقساط المسترجعة.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-orange-500 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            تنبيه تلقائي عند تجاوز الزبون لسقف الدين المسموح.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-orange-500 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            ربط مباشر مع الواتساب لإرسال كشف الحساب فوراً.
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* محاكي أداة الكريدي التفاعلي */}
+                                <div className="lg:col-span-6">
+                                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl space-y-4">
+                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                                            <span className="font-extrabold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                                                <Icon name="smartphone" className="text-orange-500" /> تجربة إرسال تذكير كريدي بالواتساب
+                                            </span>
+                                            <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">حي وتفاعلي</span>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 mb-1">اسم الزبون</label>
+                                                <input type="text" value={kridiName} onChange={(e) => setKridiName(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">المبلغ (درهم)</label>
+                                                    <input type="number" value={kridiAmount} onChange={(e) => setKridiAmount(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">البيان/السلعة</label>
+                                                    <input type="text" value={kridiNote} onChange={(e) => setKridiNote(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 space-y-2">
+                                                <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 block">معاينة الرسالة الصادرة للزبون:</span>
+                                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed" dir="rtl">
+                                                    "مرحباً <strong>{kridiName}</strong>، نود إعلامكم أن باقي حسابكم لدى متجرنا هو: <strong className="text-emerald-600">{kridiAmount} درهم</strong> بخصوص ({kridiNote}). شكراً لتعاملكم معنا!"
+                                                </p>
+                                            </div>
+
+                                            <button onClick={triggerWhatsAppPreview} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md text-sm">
+                                                <Icon name="message-square" className="w-4 h-4" /> إرسال تجريبي عبر الواتساب
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 2: أداة الفاتورة الاحترافية */}
+                    <section id="invoice-tool" className="scroll-mt-28">
+                        <div className="bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 sm:p-10 rounded-3xl border border-blue-200 dark:border-slate-700 shadow-lg">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                {/* محاكي أداة الفاتورة التفاعلي */}
+                                <div className="lg:col-span-6 order-2 lg:order-1">
+                                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl space-y-4">
+                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                                            <span className="font-extrabold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                                                <Icon name="file-text" className="text-blue-600" /> منشئ الفواتير الفوري
+                                            </span>
+                                            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">معاينة فورية</span>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 mb-1">اسم العميل / الشركة</label>
+                                                <input type="text" value={invClient} onChange={(e) => setInvClient(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="col-span-1">
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">المنتج/الخدمة</label>
+                                                    <input type="text" value={invItem} onChange={(e) => setInvItem(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">السعر (د.م)</label>
+                                                    <input type="number" value={invPrice} onChange={(e) => setInvPrice(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1">الكمية</label>
+                                                    <input type="number" value={invQty} onChange={(e) => setInvQty(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                </div>
+                                            </div>
+
+                                            {/* فاتورة مصغرة حية */}
+                                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-2">
+                                                <div className="flex justify-between font-black text-slate-800 dark:text-slate-100 border-b pb-2">
+                                                    <span>فاتورة إلى: {invClient}</span>
+                                                    <span>التاريخ: {new Date().toLocaleDateString('ar-MA')}</span>
+                                                </div>
+                                                <div className="flex justify-between text-slate-600 dark:text-slate-400 font-bold">
+                                                    <span>{invItem} (×{invQty})</span>
+                                                    <span>{(parseFloat(invPrice || 0) * parseFloat(invQty || 0)).toLocaleString()} درهم</span>
+                                                </div>
+                                                <div className="flex justify-between font-black text-blue-600 dark:text-blue-400 text-sm pt-2 border-t">
+                                                    <span>المجموع الإجمالي:</span>
+                                                    <span>{(parseFloat(invPrice || 0) * parseFloat(invQty || 0)).toLocaleString()} درهم</span>
+                                                </div>
+                                            </div>
+
+                                            <button onClick={() => alert("في الأداة الفعلية يمكنك طباعة الفاتورة أو تحميلها كـ PDF بضغطة زر واحدة مع اللوجو الخاص بك!")} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition shadow-md text-sm">
+                                                <Icon name="printer" className="w-4 h-4" /> طباعة / تحميل PDF الفاتورة
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
+                                    <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-3.5 py-1.5 rounded-xl font-black text-xs">
+                                        <Icon name="file-text" className="w-4 h-4" /> الأداة الثانية: أداة الفواتير السريعة
+                                    </div>
+                                    <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-snug">
+                                        اصنع فواتير رسمية واحترافية بشعار متجرك في 5 ثوانٍ!
+                                    </h2>
+                                    <p className="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        لا تحتاج لبرامج معقدة. أدخل معلومات العميل والمنتجات واحصل على فاتورة منسقة جاهزة للطباعة أو التنزيل بتنسيق PDF عالي الجودة مع شعارك واسم متجرك.
+                                    </p>
+                                    <ul className="space-y-3 font-bold text-sm text-slate-700 dark:text-slate-200">
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-blue-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            دعم إضافة شعار المتجر (Logo) وتفاصيل الهوية التجارية.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-blue-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            حساب تلقائي للمجاميع مجاناً وبدون أخطاء.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-blue-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            تنسيق متوافق مع كافة الطابعات العادية والطابعات الحرارية.
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 3: أداة تأكيد الطلبات والتجارة الإلكترونية */}
+                    <section id="orders-tool" className="scroll-mt-28">
+                        <div className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent p-6 sm:p-10 rounded-3xl border border-emerald-200 dark:border-slate-700 shadow-lg">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                                <div className="lg:col-span-6 space-y-6">
+                                    <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3.5 py-1.5 rounded-xl font-black text-xs">
+                                        <Icon name="check-circle-2" className="w-4 h-4" /> الأداة الثالثة: تأكيد الطلبات والمبيعات
+                                    </div>
+                                    <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white leading-snug">
+                                        ارفع نسبة التوصيل وضاعف أرباح تجارتك الإلكترونية!
+                                    </h2>
+                                    <p className="text-sm sm:text-base font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        نظام ذكي لإدارة وتأكيد طلبيات الدفع عند الاستلام (COD). نظم الطلبات الواردة، تواصل مع المشترين لتأكيد العناوين، وقلل نسبة الرجوع والطلبات الملغاة بفاعلية.
+                                    </p>
+                                    <ul className="space-y-3 font-bold text-sm text-slate-700 dark:text-slate-200">
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-emerald-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            تتبع حالات الطلبات: جديد، مؤكد، ملغى، قيد الشحن.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-emerald-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            رسائل جاهزة للتأكيد بضغطة زر على الواتساب.
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="p-1.5 bg-emerald-600 text-white rounded-lg"><Icon name="check" className="w-4 h-4" /></div>
+                                            إحصائيات فورية لنسبة نجاح التأكيد لكل مدينة.
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                {/* محاكي تأكيد الطلبات التفاعلي */}
+                                <div className="lg:col-span-6">
+                                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl space-y-4">
+                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                                            <span className="font-extrabold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                                                <Icon name="shopping-bag" className="text-emerald-600" /> إدارة الطلبات التفاعلية الحية
+                                            </span>
+                                            <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-1 rounded-full">اضغط للتغيير</span>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {orders.map((ord, idx) => (
+                                                <div key={ord.id} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                                                    <div>
+                                                        <div className="font-extrabold text-xs text-slate-800 dark:text-white">{ord.client} <span className="text-slate-400 font-normal">({ord.city})</span></div>
+                                                        <div className="text-[11px] font-bold text-slate-500">{ord.id} - {ord.amount} درهم</div>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => {
+                                                            const newStatus = ord.status === 'pending' ? 'confirmed' : (ord.status === 'confirmed' ? 'cancelled' : 'pending');
+                                                            const newOrders = [...orders];
+                                                            newOrders[idx].status = newStatus;
+                                                            setOrders(newOrders);
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition ${
+                                                            ord.status === 'confirmed' ? 'bg-green-500 text-white' : 
+                                                            (ord.status === 'cancelled' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white')
+                                                        }`}
+                                                    >
+                                                        {ord.status === 'confirmed' ? 'مؤكد ✓' : (ord.status === 'cancelled' ? 'ملغى ✕' : 'قيد الانتظار...')}
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-xl text-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                                                💡 انقر على زر الحالة أعلاه لتجربة التغيير الفوري للمبيعات الإحصائية!
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 4: حاسبة العائد والتوفير الذكية */}
+                    <section id="calculator" className="scroll-mt-28">
+                        <div className="bg-slate-900 text-white p-8 sm:p-12 rounded-3xl shadow-2xl relative overflow-hidden border border-slate-800">
+                            <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                            
+                            <div className="max-w-3xl mx-auto text-center space-y-4 mb-10">
+                                <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3.5 py-1.5 rounded-full text-xs font-extrabold inline-block">
+                                    🧮 حاسبة الأرباح والتوفير
+                                </span>
+                                <h2 className="text-2xl sm:text-4xl font-black">احسب كم ستوفر شهرياً باستخدام المنصة؟</h2>
+                                <p className="text-slate-400 text-sm font-semibold">حرك المؤشرات التفاعلية أدناه لمعرفة النسبة التقريبية لحماية ديونك وتوفير وقتك:</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                                <div className="md:col-span-6 space-y-6">
+                                    <div>
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span>عدد الزبناء / الطلبيات الشهري:</span>
+                                            <span className="text-orange-400 font-black">{monthlyClients} زبون</span>
+                                        </div>
+                                        <input type="range" min="10" max="300" step="5" value={monthlyClients} onChange={(e) => setMonthlyClients(Number(e.target.value))} className="w-full accent-orange-500 bg-slate-700 h-2 rounded-lg cursor-pointer" />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span>متوسط قيمة الدين/الطلب (درهم):</span>
+                                            <span className="text-blue-400 font-black">{avgDebt} د.م</span>
+                                        </div>
+                                        <input type="range" min="100" max="3000" step="50" value={avgDebt} onChange={(e) => setAvgDebt(Number(e.target.value))} className="w-full accent-blue-500 bg-slate-700 h-2 rounded-lg cursor-pointer" />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex justify-between text-sm font-bold mb-2">
+                                            <span>نسبة المبيعات الضائعة قبل التأكيد (%):</span>
+                                            <span className="text-rose-400 font-black">{cancelRate}%</span>
+                                        </div>
+                                        <input type="range" min="5" max="60" step="5" value={cancelRate} onChange={(e) => setCancelRate(Number(e.target.value))} className="w-full accent-rose-500 bg-slate-700 h-2 rounded-lg cursor-pointer" />
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-6 bg-slate-800/90 p-6 rounded-3xl border border-slate-700 space-y-4">
+                                    <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-700">
+                                        <span className="text-xs font-bold text-slate-400 block mb-1">الديون المحمية والمضبوطة شهرياً:</span>
+                                        <span className="text-2xl sm:text-3xl font-black text-emerald-400">{totalProtectedDebt.toLocaleString()} درهم</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-3 bg-slate-900/80 rounded-2xl border border-slate-700 text-center">
+                                            <span className="text-[11px] font-bold text-slate-400 block mb-1">الوقت الموفر شهرياً</span>
+                                            <span className="text-xl font-black text-orange-400">~{savedHours} ساعة</span>
+                                        </div>
+                                        <div className="p-3 bg-slate-900/80 rounded-2xl border border-slate-700 text-center">
+                                            <span className="text-[11px] font-bold text-slate-400 block mb-1">أرباح مسترجعة من التأكيد</span>
+                                            <span className="text-xl font-black text-blue-400">+{savedSales.toLocaleString()} د.م</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 5: شبكة المميزات العصرية Bento Box */}
+                    <section id="bento-features" className="scroll-mt-28 space-y-8">
+                        <div className="text-center max-w-2xl mx-auto">
+                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white">مميزات الجيل الحديث للتاجر</h2>
+                            <p className="text-slate-500 font-bold text-sm mt-2">صممت كل تفصيلة لتوفير وقتك وزيادة أرباحك وتسهيل عملك اليومي</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition space-y-3">
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/40 text-orange-600 rounded-2xl flex items-center justify-center">
+                                    <Icon name="wifi-off" className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">تطبيق يعمل بدون إنترنت (Offline)</h3>
+                                <p className="text-xs font-semibold text-slate-500 leading-relaxed">
+                                    جميع بياناتك تحفظ محلياً على جهازك بأمان تكتيكي تام. يمكنك استخدام التطبيق حتى بدون اتصال بالأنترنت.
+                                </p>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition space-y-3">
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-2xl flex items-center justify-center">
+                                    <Icon name="smartphone" className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">تثبيت فوري كتطبيق (PWA)</h3>
+                                <p className="text-xs font-semibold text-slate-500 leading-relaxed">
+                                    بضغطة زر واحدة يتحول الموقع إلى تطبيق خفيف وسريع على شاشة هاتفك مع أيقونة أنيقة وتصفح سلس.
+                                </p>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition space-y-3">
+                                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-2xl flex items-center justify-center">
+                                    <Icon name="shield-check" className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-lg font-black text-slate-800 dark:text-white">خصوصية وحماية 100%</h3>
+                                <p className="text-xs font-semibold text-slate-500 leading-relaxed">
+                                    لا يتم مشاركة حساباتك أو أسماء زبنائك مع أي خوادم خارجية. بياناتك ملكك وحدك في هاتفك.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {}
+                    {/* SECTION 6: آراء التجار والشهادات */}
+                    <section id="testimonials" className="scroll-mt-28 space-y-8">
+                        <div className="text-center max-w-2xl mx-auto">
+                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white">ماذا يقول التجار عنا؟</h2>
+                            <p className="text-slate-500 font-bold text-sm mt-2">تجارب واقعية لأصحاب المحلات والتجار العصريين</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                                <div className="flex items-center gap-1 text-amber-400">
+                                    {[...Array(5)].map((_, i) => <Icon key={i} name="star" className="w-4 h-4 fill-amber-400" />)}
+                                </div>
+                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    "دفتر الكريدي غير طريقة نسق عملي في المحل. أصبحت أرسل تذكيرات الديون بالواتساب والزبناء يؤدون ما عليهم دون إحراج!"
+                                </p>
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-white">
+                                    - الحاج مصطفى (صاحب متجر مواد غذائية)
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                                <div className="flex items-center gap-1 text-amber-400">
+                                    {[...Array(5)].map((_, i) => <Icon key={i} name="star" className="w-4 h-4 fill-amber-400" />)}
+                                </div>
+                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    "أداة تأكيد الطلبات زادت نسبة توصيل الطلبيات بمتجري الإلكتروني من 60% إلى أكثر من 88%! أداة أسطورية."
+                                </p>
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-white">
+                                    - يونس العباسي (تاجر إلكتروني)
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                                <div className="flex items-center gap-1 text-amber-400">
+                                    {[...Array(5)].map((_, i) => <Icon key={i} name="star" className="w-4 h-4 fill-amber-400" />)}
+                                </div>
+                                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    "استخراج الفواتير أصبح يستغرق ثوانٍ معدودة، ومع إمكانية وضع الشعار الخاص بنا أصبحت المعاملات أكثر احترافية."
+                                </p>
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-white">
+                                    - أمينة بنجلون (صاحبة ورشة تجهيزات)
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* SECTION 7: الأسئلة الشائعة */}
+                    <section id="faq" className="scroll-mt-28 space-y-8 max-w-4xl mx-auto">
+                        <div className="text-center">
+                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white">الأسئلة الشائعة</h2>
+                            <p className="text-slate-500 font-bold text-sm mt-2">إجابات عن أهم الاستفسارات حول الأدوات</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {[
+                                { q: "هل المنصة مجانية بالكامل؟", a: "نعم! جميع الأدوات الثلاث (الكريدي، الفواتير، وتأكيد الطلبات) مجانية 100% ومتاحة للاستخدام المباشر." },
+                                { q: "كيف أقوم بتثبيت المنصة كتطبيق على هاتف المحمول؟", a: "من خلال زر 'تثبيت التطبيق مجاناً' في أعلى الصفحة، أو من خيارات المتصفح اختر (إضافة إلى الشاشة الرئيسية)." },
+                                { q: "هل ضياع هاتفي يعني ضياع بيانات الكريدي؟", a: "يتم حفظ البيانات على الذاكرة المحلية لهاتفك، ويمكنك في أي وقت تصدير الفواتير أو تقارير الحسابات كملفات PDF لحفظ نسخة احتياطية." },
+                                { q: "هل تعمل المنصة بدون إنترنت؟", a: "نعم بالكامل! يمكنك تسجل الديون، إنشاء الفواتير وتصفح الطلبات حتى أثناء انقطاع الأنترنت." }
+                            ].map((faq, idx) => (
+                                <div key={idx} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                    <button onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)} className="w-full p-5 text-right font-black text-slate-800 dark:text-white flex justify-between items-center text-sm sm:text-base">
+                                        <span>{faq.q}</span>
+                                        <Icon name={openFaq === idx ? "chevron-up" : "chevron-down"} className="w-5 h-5 text-orange-500" />
+                                    </button>
+                                    {openFaq === idx && (
+                                        <div className="p-5 pt-0 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-700 leading-relaxed">
+                                            {faq.a}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {}
+                    {/* BANNER CTA - شريط دعائي سفلي حماسي */}
+                    <section className="bg-gradient-to-r from-orange-500 via-rose-500 to-blue-600 p-8 sm:p-12 rounded-3xl text-white text-center shadow-2xl space-y-6">
+                        <h2 className="text-2xl sm:text-4xl font-black">جاهز لتنظيم أعمالك وضمان أرباحك اليوم؟</h2>
+                        <p className="text-sm sm:text-base font-bold text-orange-100 max-w-2xl mx-auto">
+                            انضم لأكثر من 10,000 تاجر يستفيدون من الأدوات الثلاث الذكية يومياً على هواتفهم.
+                        </p>
+                        <button onClick={handleInstallPwa} className="bg-white text-slate-900 font-black py-4 px-10 rounded-2xl shadow-xl hover:bg-slate-100 transition transform hover:scale-105 inline-flex items-center gap-3 text-base">
+                            <Icon name="download" className="w-5 h-5 text-orange-500" /> تثبيت التطبيق الآن مجاناً
+                        </button>
+                    </section>
+
+                </div>
+            );
+        }
+
+        // رندر المكون الرئيسي
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<HomePage />);
+    </script>
+</body>
+</html>
